@@ -8,6 +8,7 @@ from typing import Any, Dict, Iterable, List, Optional
 import numpy as np
 import torch
 import torchvision.transforms as T
+import cv2
 from decord import VideoReader, cpu
 from langchain.pydantic_v1 import BaseModel, root_validator
 from langchain_community.vectorstores import VDMS
@@ -45,6 +46,26 @@ class vCLIPEmbeddings(BaseModel, Embeddings):
 
     def embed_query(self, text: str) -> List[float]:
         return self.embed_documents([text])[0]
+
+    def embed_image(self, uris: List[str]) -> List[List[float]]:
+        # Open images directly as PIL images
+        image_features = []
+        for image_path in sorted(uris):
+            # Encode the video to get the embeddings
+            model_device = next(self.model.parameters()).device
+            # Preprocess the video for the model
+            clip_images = self.load_image_for_vclip(
+                image_path,
+                max_img_size=224
+            )
+            embeddings_tensor = self.model.get_image_embeddings([clip_images])
+
+            # Convert tensor to list and add to the video_features list
+            embeddings_list = embeddings_tensor.tolist()
+
+            image_features.append(embeddings_list)
+
+        return image_features
 
     def embed_video(self, paths: List[str], **kwargs: Any) -> List[List[float]]:
         # Open images directly as PIL images
@@ -92,6 +113,16 @@ class vCLIPEmbeddings(BaseModel, Embeddings):
 
         return clip_images
 
+    def load_image_for_vclip(self, image_path, max_img_size=224, **kwargs):
+        clip_images = []
+
+        # read images
+        im = cv2.imread(image_path)  # H W C
+        im = cv2.resize(im, (max_img_size, max_img_size))
+        im = np.array(im)
+        clip_images.append(toPIL(im))
+
+        return clip_images
 
 class VideoVS:
     def __init__(

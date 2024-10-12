@@ -1,0 +1,15 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Path to all images
+images: uploaded_files/
+# How do you want to generate feature embeddings?
+embeddings:
+  is_transformer: True
+  model_name: "openai/clip-vit-base-patch32"
+  path: "uploaded_files/embeddings"
+# Path to store metadata files
+meta_output_dir: uploaded_files/image_metadata/
+
+vector_db:
+  choice_of_db: "vdms" # #Supported databases [vdms]

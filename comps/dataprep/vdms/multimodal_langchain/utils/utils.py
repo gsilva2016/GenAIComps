@@ -44,7 +44,6 @@ def calculate_intervals(video_path, chunk_duration, clip_duration):
     cap.release()
     return intervals
 
-
 def process_all_videos(config):
     path = config["videos"]
     meta_output_dir = config["meta_output_dir"]
@@ -132,6 +131,60 @@ def process_all_videos(config):
                 "video_path": f"{os.path.join(path,each_video)}",
             }
         )
+    os.makedirs(meta_output_dir, exist_ok=True)
+    metadata_file = os.path.join(meta_output_dir, "metadata.json")
+    with open(metadata_file, "w") as f:
+        json.dump(metadata, f, indent=4)
+
+def process_all_images(config):
+    path = config["images"]
+    meta_output_dir = config["meta_output_dir"]
+    selected_db = config["vector_db"]["choice_of_db"]
+
+    images = [file for file in os.listdir(path) if file.endswith((".jpg", ".png"))]
+
+    # print (f'Total {len(images)} images will be processed')
+    metadata = {}
+
+    for i, each_image in enumerate(tqdm(images)):
+        metadata[each_image] = {}
+        keyname = each_image
+        image_path = os.getcwd() + "/" + os.path.join(path, each_image)
+        date_time = datetime.datetime.now()
+        # date_time = t.ctime(os.stat(image_path).st_ctime)
+        # Get the local timezone of the machine
+        local_timezone = get_localzone()
+        time_format = "%a %b %d %H:%M:%S %Y"
+        if not isinstance(date_time, datetime.datetime):
+            date_time = datetime.datetime.strptime(date_time, time_format)
+        time = date_time.strftime("%H:%M:%S")
+        hours, minutes, seconds = map(float, time.split(":"))
+        date = date_time.strftime("%Y-%m-%d")
+        year, month, day = map(int, date.split("-"))
+
+        interval_count = 0
+        metadata.pop(each_image)
+        keyname = os.path.splitext(os.path.basename(image_path))[0]
+        metadata[keyname] = {"image_path": image_path}
+        metadata[keyname].update
+        ({
+            "date": date,
+            "year": year,
+            "month": month,
+            "day": day,
+            "time": time,
+            "hours": hours,
+            "minutes": minutes,
+            "seconds": seconds
+        })
+        if selected_db == "vdms":
+            # Localize the current time to the local timezone of the machine
+            current_time_local = date_time.replace(tzinfo=datetime.timezone.utc).astimezone(local_timezone)
+
+            # Convert the localized time to ISO 8601 format with timezone offset
+            iso_date_time = current_time_local.isoformat()
+            metadata[keyname]["date_time"] = {"_date": str(iso_date_time)}
+
     os.makedirs(meta_output_dir, exist_ok=True)
     metadata_file = os.path.join(meta_output_dir, "metadata.json")
     with open(metadata_file, "w") as f:

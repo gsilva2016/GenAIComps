@@ -37,13 +37,23 @@ export PYTHONPATH=${path_to_comps}
 
 Start document preparation microservice for VDMS with below command.
 
+To process videos:
+
 ```bash
 python ingest_videos.py
+```
+
+To process images:
+
+```bash
+python ingest_images.py
 ```
 
 ## 🚀2. Start Microservice with Docker (Option 2)
 
 ### 2.1 Start VDMS Server
+
+This step is not needed if using the docker compose command below.
 
 ```bash
 docker run -d --name="vdms-vector-db" -p 55555:55555 intellabs/vdms:latest
@@ -58,17 +68,22 @@ export host_ip=$(hostname -I | awk '{print $1}')
 export VDMS_HOST=${host_ip}
 export VDMS_PORT=55555
 export INDEX_NAME="rag-vdms"
-export your_hf_api_token="{your_hf_token}"
 ```
 
 ### 2.3 Build Docker Image
 
-- Build docker image
+- Build docker image for processing videos
 
   ```bash
-  cd ../../../
+  cd ../../../..
   docker build -t opea/dataprep-vdms:latest --network host --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/dataprep/vdms/multimodal_langchain/Dockerfile .
+  ```
 
+- Build docker image for processing images
+
+  ```bash
+  cd ../../../..
+  docker build -t opea/dataprep-vdms:latest --network host --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/dataprep/vdms/multimodal_langchain/Dockerfile.vision .
   ```
 
 ### 2.4 Run Docker Compose
@@ -98,6 +113,20 @@ Make sure the file path after `files=@` is correct.
        http://localhost:6007/v1/dataprep
   ```
 
+  ```bash
+  curl -X POST \
+       -H "Content-Type: multipart/form-data" \
+       -F "files=@./file1.png" \
+       http://localhost:6007/v1/dataprep
+   ```
+
+  ```bash
+  curl -X POST \
+       -H "Content-Type: multipart/form-data" \
+       -F "files=@./file1.jpg" \
+       http://localhost:6007/v1/dataprep
+  ```
+
 - Multiple file upload
 
   ```bash
@@ -109,10 +138,24 @@ Make sure the file path after `files=@` is correct.
        http://localhost:6007/v1/dataprep
   ```
 
+  ```bash
+  curl -X POST \
+       -H "Content-Type: multipart/form-data" \
+       -F "files=@./file1.png" \
+       -F "files=@./file2.png" \
+       -F "files=@./file3.png" \
+       http://localhost:6007/v1/dataprep
+  ```
+
+
 - List of uploaded files
 
   ```bash
   curl -X GET http://localhost:6007/v1/dataprep/get_videos
+  ```
+
+  ```bash
+  curl -X GET http://localhost:6007/v1/dataprep/get_images
   ```
 
 - Download uploaded files
@@ -120,5 +163,5 @@ Make sure the file path after `files=@` is correct.
   Use the file name from the list
 
   ```bash
-  curl -X GET http://localhost:6007/v1/dataprep/get_file/${filename}
+  curl -X GET http://localhost:6007/v1/dataprep/get_file/${filename} --output ${filename}
   ```
