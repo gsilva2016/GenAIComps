@@ -50,3 +50,10 @@ curl http://localhost:6000/v1/embeddings \
       -H 'Content-Type: application/json'
 
 ```
+
+```bash
+curl http://localhost:6000/v1/embeddings_image \
+      -X POST   -d '{"base64_image":"$BASE64_ENCODED_IMAGE"}' \
+      -H 'Content-Type: application/json'
+
+```

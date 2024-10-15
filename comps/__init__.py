@@ -9,6 +9,7 @@ from comps.cores.proto.docarray import (
     Base64ByteStrDoc,
     DocPath,
     EmbedDoc,
+    EmbedImage,
     GeneratedDoc,
     LLMParamsDoc,
     SearchedDoc,

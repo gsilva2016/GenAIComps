@@ -74,6 +74,10 @@ class EmbedDoc(BaseDoc):
     constraints: Optional[Union[Dict[str, Any], None]] = None
 
 
+class EmbedImage(ImageDoc):
+    embedding: conlist(float, min_length=0)
+
+
 class EmbedMultimodalDoc(EmbedDoc):
     # extend EmbedDoc with these attributes
     url: Optional[ImageUrl] = Field(

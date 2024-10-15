@@ -4,6 +4,9 @@
 import datetime
 import os
 import time
+from PIL import Image
+from io import BytesIO
+import base64
 from typing import Union
 
 from dateparser.search import search_dates
@@ -11,8 +14,10 @@ from embeddings_clip import vCLIP
 
 from comps import (
     EmbedDoc,
+    EmbedImage,
     ServiceType,
     TextDoc,
+    ImageDoc,
     opea_microservices,
     register_microservice,
     register_statistics,
@@ -20,7 +25,7 @@ from comps import (
 )
 
 
-def filtler_dates(prompt):
+def filter_dates(prompt):
 
     base_date = datetime.datetime.today()
     today_date = base_date.date()
@@ -55,6 +60,30 @@ def filtler_dates(prompt):
     else:
         return {}
 
+@register_microservice(
+    name="opea_service@embedding_multimodal",
+    service_type=ServiceType.EMBEDDING,
+    endpoint="/v1/embeddings_image",
+    host="0.0.0.0",
+    port=6000,
+    input_datatype=ImageDoc,
+    output_datatype=EmbedImage,
+)
+@register_statistics(names=["opea_service@embedding_multimodal"])
+def embedding_image(input: ImageDoc) -> EmbedImage:
+    start = time.time()  
+
+    if isinstance(input, ImageDoc):
+        # Handle image input
+        pil_image = Image.open(BytesIO(base64.b64decode(input.base64_image)))
+        embed_vector = embeddings.get_video_embeddings([ pil_image ])
+        res = EmbedImage(embedding=embed_vector[0])
+
+    else:
+        raise ValueError("Invalid input type")
+
+    statistics_dict["opea_service@embedding_multimodal"].append_latency(time.time() - start, None)
+    return res
 
 @register_microservice(
     name="opea_service@embedding_multimodal",
@@ -72,7 +101,7 @@ def embedding(input: TextDoc) -> EmbedDoc:
     if isinstance(input, TextDoc):
         # Handle text input
         embed_vector = embeddings.embed_query(input.text).tolist()[0]
-        res = EmbedDoc(text=input.text, embedding=embed_vector, constraints=filtler_dates(input.text))
+        res = EmbedDoc(text=input.text, embedding=embed_vector, constraints=filter_dates(input.text))
 
     else:
         raise ValueError("Invalid input type")
