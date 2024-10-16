@@ -53,7 +53,7 @@ curl http://localhost:6000/v1/embeddings \
 
 ```bash
 curl http://localhost:6000/v1/embeddings_image \
-      -X POST   -d '{"base64_image":"$BASE64_ENCODED_IMAGE"}' \
-      -H 'Content-Type: application/json'
-
+      -X POST \
+      -F "file=@./file1.png" \
+      -H "Content-Type: multipart/form-data"
 ```

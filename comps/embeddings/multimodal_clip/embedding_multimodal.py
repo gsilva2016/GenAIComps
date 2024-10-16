@@ -5,8 +5,7 @@ import datetime
 import os
 import time
 from PIL import Image
-from io import BytesIO
-import base64
+from fastapi import File, HTTPException, UploadFile
 from typing import Union
 
 from dateparser.search import search_dates
@@ -66,21 +65,25 @@ def filter_dates(prompt):
     endpoint="/v1/embeddings_image",
     host="0.0.0.0",
     port=6000,
-    input_datatype=ImageDoc,
     output_datatype=EmbedImage,
 )
 @register_statistics(names=["opea_service@embedding_multimodal"])
-def embedding_image(input: ImageDoc) -> EmbedImage:
-    start = time.time()  
+def embedding_image(file: UploadFile = File(...)) -> EmbedImage:
+    start = time.time()
 
-    if isinstance(input, ImageDoc):
-        # Handle image input
-        pil_image = Image.open(BytesIO(base64.b64decode(input.base64_image)))
-        embed_vector = embeddings.get_video_embeddings([ pil_image ])
-        res = EmbedImage(embedding=embed_vector[0])
-
+    if file:
+        file_trailing = os.path.splitext(file.filename)[1]
+        if file_trailing == ".jpg" or file_trailing == ".png":
+            pil_image = Image.open(file.file)
+        else:
+            raise HTTPException(
+                    status_code=400, 
+                    detail=f"File {file.filename} is not png or jpg. Please upload png and/or jpg files only.")
     else:
         raise ValueError("Invalid input type")
+
+    embed_vector = embeddings.get_video_embeddings([ pil_image ])
+    res = EmbedImage(embedding=embed_vector[0])
 
     statistics_dict["opea_service@embedding_multimodal"].append_latency(time.time() - start, None)
     return res
