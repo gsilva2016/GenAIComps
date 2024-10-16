@@ -177,7 +177,7 @@ curl -X POST \
     http://localhost:6007/v1/dataprep
 ```
 
-You can specify chunk_size and chunk_size by the following commands.
+You can specify chunk_size and chunk_overlap by the following commands.
 
 ```bash
 curl -X POST \
