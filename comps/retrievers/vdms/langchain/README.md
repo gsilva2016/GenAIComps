@@ -100,6 +100,12 @@ You can choose one as needed.
 docker run -d --name="retriever-vdms-server" -p 7000:7000 --ipc=host -e http_proxy=$http_proxy -e https_proxy=$https_proxy -e INDEX_NAME=$INDEX_NAME -e TEI_EMBEDDING_ENDPOINT=$TEI_EMBEDDING_ENDPOINT opea/retriever-vdms:latest
 ```
 
+CLIP image retrieval:
+
+```bash
+docker run --rm -itd --name="retriever-vdms-server" --net host --ipc=host -e http_proxy=$http_proxy -e https_proxy=$https_proxy -e use_clip=1  opea/retriever-vdms:latest
+```
+
 ### 2.4 Run Docker with Docker Compose (Option B)
 
 ```bash
