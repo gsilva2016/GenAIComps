@@ -11,6 +11,7 @@ from vdms_config import DEBUG, DISTANCE_STRATEGY, EMBED_MODEL, INDEX_NAME, SEARC
 
 from comps import (
     EmbedDoc,
+    EmbedImage,
     SearchedDoc,
     SearchedMultimodalDoc,
     ServiceType,
@@ -44,6 +45,34 @@ if DEBUG:
 
 client = VDMS_Client(VDMS_HOST, VDMS_PORT)
 
+
+@register_microservice(
+    name="opea_service@retriever_vdms",
+    service_type=ServiceType.RETRIEVER,
+    endpoint="/v1/retrieval_image",
+    host="0.0.0.0",
+    port=7000,
+)
+@register_statistics(names=["opea_service@retriever_vdms"])
+def retrieve_image(input: EmbedImage) -> SearchedMultimodalDoc:
+    start = time.time()
+
+    searched_docs = []
+    metadata_list = []
+
+    search_res = vector_db.similarity_search_with_score_by_vector(embedding=input.embedding, k=1, fetch_k=1)
+
+    if input.score_threshold is None:
+        input.score_threshold = -1.0 # -1 to 1 similarity
+
+    for r in search_res:
+        if r[1] >= input.score_threshold:
+            searched_docs.append(TextDoc(text=r[0].page_content))
+            metadata_list.append(r[0].metadata)
+
+    result = SearchedMultimodalDoc(retrieved_docs=searched_docs, metadata=metadata_list, initial_query=str(input.embedding))
+    statistics_dict["opea_service@retriever_vdms"].append_latency(time.time() - start, None)
+    return result
 
 @register_microservice(
     name="opea_service@retriever_vdms",

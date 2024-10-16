@@ -76,6 +76,8 @@ class EmbedDoc(BaseDoc):
 
 class EmbedImage(ImageDoc):
     embedding: conlist(float, min_length=0)
+    search_type: str = "similiarity"
+    score_threshold: float = 0.4
 
 
 class EmbedMultimodalDoc(EmbedDoc):
